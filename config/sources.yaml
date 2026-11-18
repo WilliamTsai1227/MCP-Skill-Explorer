@@ -1,0 +1,79 @@
+# Skill Explorer 來源設定
+# type: repo   -> 掃描指定 repo 中所有 SKILL.md
+# type: search -> 用 GitHub 搜尋找高星 repo，再掃描其中的 SKILL.md
+# 修改後不需重啟：每次抓取都會重新讀取本檔。
+
+schedule:
+  cron: "0 3 * * *"        # 每天 03:00 自動抓取（本機時間）
+  run_on_startup_if_empty: true
+
+analysis:
+  provider: openai              # openai | anthropic（環境變數 LLM_PROVIDER 可覆寫）
+  openai_model: gpt-6-luna      # 環境變數 OPENAI_MODEL 可覆寫；需 OPENAI_API_KEY
+  anthropic_model: claude-opus-5-5
+  max_per_run: 80               # 每次最多用 LLM 分析幾個（內容沒變的不會重算）；沒有 key 時用內建規則
+
+# 「為你推薦」排序用的興趣關鍵字（中英文都可，比對名稱/描述/中文摘要）。
+# 這是依你目前的專案（Skill 探索、架構圖）猜的起始值，請自行增減；
+# 在網頁上對 skill 按 👍/👎 會更直接地影響排序。
+interests:
+  - mcp
+  - diagram
+  - architecture
+  - automation
+  - workflow
+
+# 「精選」：依推薦分數取前 size 個，每個 repo 最多 per_repo 個（避免大廠幾百個雲端 skill 洗版）
+curated:
+  size: 150
+  per_repo: 12
+
+# 官方 MCP Registry（registry.modelcontextprotocol.io，約 6.7 萬個 server，洗版很多）
+mcp:
+  enabled: true
+  min_stars: 300                 # GitHub 星星數門檻（需要 GITHUB_TOKEN）
+  max_servers_per_namespace: 20  # 同一發布者超過這個數量視為洗版，整批略過
+  stars_ttl_days: 7              # 星星數快取天數
+  curated:
+    size: 100                    # 精選 MCP 數量
+    per_owner: 3                 # 每個發布者最多幾個
+  # 大廠自己網域發布的 server，即使沒有 GitHub repo / 星星數也收
+  trusted_namespaces: [com.microsoft, com.github, io.github.github, com.stripe, com.cloudflare, com.atlassian,
+    com.notion, com.linear, com.figma, com.supabase, com.vercel, com.paypal, com.shopify, com.sentry,
+    com.hubspot, com.zapier, com.mongodb, com.redis, com.postman, com.gitlab, com.google, com.amazonaws,
+    com.anthropic, com.openai, io.github.microsoft, io.github.awslabs, io.github.googleapis]
+
+sources:
+  # ---- 官方 / 大廠 ----
+  - {id: anthropic,  vendor: Anthropic,       type: repo, repo: anthropics/skills,             official: true}
+  - {id: openai,     vendor: OpenAI,          type: repo, repo: openai/skills,                 official: true}
+  - {id: google,     vendor: Google,          type: repo, repo: google/skills,                 official: true}
+  - {id: gemini,     vendor: Google,          type: repo, repo: google-gemini/gemini-skills,   official: true}
+  - {id: microsoft,  vendor: Microsoft/Azure, type: repo, repo: microsoft/skills,              official: true}
+  - {id: aws,        vendor: AWS,             type: repo, repo: aws/agent-toolkit-for-aws,     official: true}
+  - {id: awslabs,    vendor: AWS,             type: repo, repo: awslabs/agent-plugins,         official: true}
+  - {id: huggingface,vendor: Hugging Face,    type: repo, repo: huggingface/skills,            official: true}
+  - {id: vercel,     vendor: Vercel,          type: repo, repo: vercel-labs/agent-skills,      official: true}
+  - {id: cloudflare, vendor: Cloudflare,      type: repo, repo: cloudflare/skills,             official: true}
+  - {id: supabase,   vendor: Supabase,        type: repo, repo: supabase/agent-skills,         official: true}
+  - {id: copilot-plugins, vendor: GitHub Copilot, type: repo, repo: github/copilot-plugins, official: true}
+  - {id: copilot-lever,   vendor: GitHub Copilot, type: repo, repo: github/lever,           official: true}
+  # awesome-copilot 由 GitHub 維護、但內容是社群投稿（479 個），所以不標官方；精選每個 repo 最多 12 個
+  - {id: awesome-copilot, vendor: GitHub Copilot, type: repo, repo: github/awesome-copilot}
+  # xAI / Grok：目前（2026-11）GitHub 上沒有官方 skill repo，出現後在這裡加一行即可。
+
+  # ---- 社群高星 ----
+  - {id: superpowers, vendor: Community, type: repo, repo: obra/superpowers}
+  - {id: addyosmani,  vendor: Community, type: repo, repo: addyosmani/agent-skills}
+  - id: topic-agent-skills
+    vendor: Community
+    type: search
+    query: "topic:agent-skills"
+    top: 12              # 取星星數前 N 個 repo
+    max_skills_per_repo: 25
+  - id: topic-claude-skills
+    vendor: Community
+    type: search
+    query: "topic:claude-skills"
+    top: 10
+    max_skills_per_repo: 25

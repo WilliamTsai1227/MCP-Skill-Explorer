@@ -1,0 +1,15 @@
+services:
+  skill-explorer:
+    build: .
+    container_name: skill-explorer
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: ${TZ:-Asia/Taipei}          # 排程 cron 使用的時區
+    ports:
+      - "127.0.0.1:${PORT:-5000}:8000"  # 只開給本機；要給區網用改成 "5000:8000"
+    volumes:
+      - ./data:/app/data               # SQLite 資料庫（重建容器不會遺失）
+      - ./config:/app/config           # 改 sources.yaml 不用重 build
